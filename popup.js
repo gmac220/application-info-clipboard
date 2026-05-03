@@ -1,74 +1,53 @@
 document.getElementById('scrapeBtn').addEventListener('click', async () => {
-  const url = document.getElementById('urlInput').value;
   const status = document.getElementById('status');
 
   try {
-    // 1. Fetch the webpage content
-    const response = await fetch(url);
-    const html = await response.text();
+    status.innerText = "Scraping current page...";
 
-    // 2. Parse the HTML string into a DOM document
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // 3. Extract data (Example: grabbing table rows)
-    const rows = doc.querySelectorAll('tr');
-    let excelData = "";
+    const result = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => {
+        const jobTitle =
+          document.querySelector('h1')?.innerText || "Not found";
 
-    rows.forEach(row => {
-      const cols = row.querySelectorAll('td, th');
-      const rowData = Array.from(cols)
-        .map(col => col.textContent.trim())
-        .join('\t'); // Tab separator for Excel columns
-      excelData += rowData + '\n'; // Newline for Excel rows
+        const salary =
+          document.querySelector('#salaryInfoAndJobType span')
+            ?.innerText || "Not found";
+
+        const jobType =
+          document.querySelector('#salaryInfoAndJobType span + span')
+            ?.innerText || "Not found";
+
+        const companyName =
+          document.querySelector('[data-testid=jobsearch-CompanyInfoContainer]').children[0].children[0].children[0].children[0].children[0].children[0]?.innerText || "Not found";
+
+        const location =
+          document.querySelector('[data-testid=jobsearch-CompanyInfoContainer]').children[0].children[0].children[0].children[2]?.innerText || "Not found";
+
+        return {
+          jobTitle,
+          salary,
+          jobType,
+          companyName,
+          location,
+          url: window.location.href
+        };
+      }
     });
 
-    // 4. Copy to clipboard
-    await navigator.clipboard.writeText(excelData);
-    status.innerText = "Copied to clipboard!";
-  } catch (err) {
-    status.innerText = "Error: " + err.message;
-  }
-});
+    const data = result[0].result;
 
-document.getElementById('scrapeBtn').addEventListener('click', async () => {
-  const url = document.getElementById('urlInput').value;
-  const status = document.getElementById('status');
-
-  document.querySelectorAll('[class*="job"]')
-
-
-  try {
-    status.innerText = "Fetching data...";
-    const response = await fetch(url);
-    const html = await response.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');  
-    
-    // Helper: Finds text near a label (e.g., finding the text next to "Salary:")
-    const findByLabel = (label) => {
-      const elements = Array.from(doc.querySelectorAll('div, p, span, li, td'));
-      const target = elements.find(el => el.textContent.toLowerCase().includes(label.toLowerCase()));
-      return target ? target.textContent.replace(label, "").trim() : "Not Found";
-    };
-
-    // Extracting Data - Adjust selectors based on your target site (e.g., LinkedIn, Indeed)
-    const data = {
-      company: doc.querySelector('.company-name, .brand, h3')?.textContent.trim() || findByLabel("Company"),
-      job: doc.querySelector('h1, .job-title')?.textContent.trim() || "Not Found",
-      salary: doc.querySelector('.salary, .pay-range')?.textContent.trim() || findByLabel("Salary"),
-      url: url,
-      location: doc.querySelector('.location, .city-state')?.textContent.trim() || findByLabel("Location")
-    };
-
-    // Format for Excel: Headers + Data separated by tabs (\t)
     const excelString = [
-      `${data.company}\t${data.job}\t${data.salary}\t${data.url}\t${data.location}`
+      `${data.companyName}\t${data.jobTitle}\t${data.salary}\t${data.url}\t${data.location}`
     ].join('\n');
 
     await navigator.clipboard.writeText(excelString);
+
     status.innerText = "Copied to clipboard!";
   } catch (err) {
+    console.error(err);
     status.innerText = "Error: " + err.message;
   }
 });

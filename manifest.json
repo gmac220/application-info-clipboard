@@ -2,7 +2,7 @@
     "name": "Copy Application Info",
     "version": "0.1.0",
     "description": "Copying information on applications",
-    "permissions": ["clipboardWrite"],
+    "permissions": ["scripting","activeTab"],
     "host_permissions": ["https://*/*"],
     "action": {
       // "default_icon": {
