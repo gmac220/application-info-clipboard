@@ -24,7 +24,7 @@ document.getElementById('scrapeBtn').addEventListener('click', async () => {
           document.querySelector('[data-testid=jobsearch-CompanyInfoContainer]').children[0].children[0].children[0].children[0].children[0].children[0]?.innerText || "Not found";
 
         const location =
-          document.querySelector('[data-testid=jobsearch-CompanyInfoContainer]').children[0].children[0].children[0].children[2]?.innerText || "Not found";
+          document.querySelector('[data-testid=jobsearch-CompanyInfoContainer]').children[0].children[0].children[0].children[1]?.innerText || "Not found";
 
         return {
           jobTitle,
